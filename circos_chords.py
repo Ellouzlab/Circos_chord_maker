@@ -89,6 +89,35 @@ def find_homology_in_folder(folder_path, num_threads):
     pd.DataFrame(results).to_csv("homology_results.csv", index=False)
     print("Homology search completed.")
 
+def get_color_gradient(percent_identity, min_percent_identity):
+    """
+    Returns a color gradient from green (high percent identity) to yellow to red (low percent identity).
+
+    Parameters:
+    percent_identity (float): The percent identity value.
+    min_percent_identity (float): The minimum percent identity to consider.
+
+    Returns:
+    tuple: RGB color.
+    """
+    # Normalize the percent identity to range between 0 and 1
+    normalized_identity = (percent_identity - min_percent_identity) / (100 - min_percent_identity)
+
+    # Invert normalized identity so high values correspond to green and low to red
+    inverted_identity = 1 - normalized_identity
+
+    if inverted_identity > 0.5:
+        # Closer to red, transition from yellow to red
+        red_amount = 1
+        green_amount = 2 * (1 - inverted_identity)
+    else:
+        # Closer to green, transition from green to yellow
+        red_amount = 2 * inverted_identity
+        green_amount = 1
+
+    return (red_amount, green_amount/1.4, 0)
+
+
 if __name__ == "__main__":
     args = arg_parser()
     if not args.rerun:
@@ -126,9 +155,9 @@ if __name__ == "__main__":
                 source = (name1, start1 - 1, end1, 900)
                 destination = (name2, start2 - 1, end2, 900)
 
-                transparency = percent_id / 100
-                gray_color = (0.5, 0.5, 0.5, transparency)  # RGB for gray, with calculated alpha
-                circle.chord_plot(source, destination, facecolor=gray_color)
+                color = get_color_gradient(percent_id, args.min_percent_id)
+                circle.chord_plot(source, destination, facecolor=color)
+
     print('Making Figure...')
 
-    circle.figure.savefig(args.output)  # To save the plot
+    circle.figure.savefig(args.output)
