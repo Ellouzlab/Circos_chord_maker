@@ -34,6 +34,15 @@ def find_homology_in_folder(folder_path, num_threads):
     results = []
     lengths = []
 
+    for i in range(len(fasta_files)):
+        query, query_position_map = concatenate_fasta_records(os.path.join(folder_path, fasta_files[i]))
+        # Store the length and sequence name for the current sequence
+        lengths.append({
+            "seq": query.id,
+            "start": 1,
+            "end": len(query.seq)
+        })
+
     def process_pair(pair):
         i, j = pair
         temp_results = []
@@ -88,6 +97,8 @@ def find_homology_in_folder(folder_path, num_threads):
 
     pd.DataFrame(results).to_csv("homology_results.csv", index=False)
     print("Homology search completed.")
+    print("Writing sequence lengths...")  # Add this print statement
+    pd.DataFrame(lengths).to_csv("sequence_lengths.csv", index=False)
 
 def get_color_gradient(percent_identity, min_percent_identity):
     """
